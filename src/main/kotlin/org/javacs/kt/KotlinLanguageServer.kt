@@ -52,6 +52,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.referencesProvider = true
         capabilities.codeActionProvider = true
         capabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
+        capabilities.documentRangeFormattingProvider = true
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace ${params.rootUri} to source path")

@@ -9,6 +9,7 @@ import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
+import org.javacs.kt.position.extractRange
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
@@ -16,6 +17,7 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.computeAsync
 import org.javacs.kt.util.Debouncer
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
+import org.javacs.kt.formatter.KotlinFormatter
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.nio.file.Path
@@ -23,8 +25,12 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
-class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
+class KotlinTextDocumentService(
+    private val sf: SourceFiles,
+    private val sp: SourcePath
+): TextDocumentService {
     private lateinit var client: LanguageClient
+    private val formatter = KotlinFormatter();
 
     fun connect(client: LanguageClient) {
         this.client = client
@@ -66,10 +72,6 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
-        TODO("not implemented")
-    }
-
     override fun definition(position: TextDocumentPositionParams) = computeAsync {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
@@ -77,10 +79,6 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
             val (file, cursor) = recover(position, false)
             goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
         }
-    }
-
-    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> {
-        TODO("not implemented")
     }
 
     override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>> {
@@ -144,6 +142,16 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
+        TODO("not implemented")
+    }
+
+    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> = computeAsync {
+        val path = Paths.get(URI.create(params.textDocument.uri))
+        val formattedCode = formatter.format(extractRange(sp.content(path), params.range))
+        listOf(TextEdit(params.range, formattedCode))
+    }
+
+    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
         TODO("not implemented")
     }
 

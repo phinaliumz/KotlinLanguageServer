@@ -93,3 +93,10 @@ fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     }
     return null
 }
+
+fun <T> attempt(block: () -> T): T? = try {
+    block()
+} catch (e: Exception) {
+    LOG.info("Failed attempt: ${e.message}")
+    null
+}
