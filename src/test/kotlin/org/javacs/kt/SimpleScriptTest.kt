@@ -21,8 +21,8 @@ class SimpleScriptTest {
         val compilerState = compiler.createState()
         val replState = repl.createState()
 
-        var line = compiler.compile(compilerState, ReplCodeLine(1, 1, "val x = 1"))
-        var result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
+        val line: ReplCompileResult
+        val result: ReplEvalResult
 
         line = compiler.compile(compilerState, ReplCodeLine(2, 2, "x"))
         result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
